@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chatbot</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .chat-input-container {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f4f4f4;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #007bff;
+        }
+
+        .chat-input-container button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-input-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+
+        .user-message .message-content {
+            background-color: #007bff;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+
+        .bot-message .message-content {
+            background-color: #e5e5e5;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat with Bot
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="chat-input-container">
+            <form id="chat-form" enctype="multipart/form-data">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Ask something...">
+                <input type="file" id="audio-input" accept="audio/*" class="hidden">
+                <button type="button" onclick="document.getElementById('audio-input').click()">🎤</button>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData();
+            var userInput = document.getElementById('chat-input').value;
+            var audioInput = document.getElementById('audio-input').files[0];
+
+            if (audioInput) {
+                formData.append('audio', audioInput);
+            } else if (userInput) {
+                formData.append('prompt', userInput);
+            }
+
+            addMessageToChat('User: ' + userInput, 'user-message');
+
+            fetch('/ask', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessageToChat('Bot: ' + data.response, 'bot-message');
+                document.getElementById('chat-input').value = '';
+                document.getElementById('audio-input').value = ''; // Clear the audio input
+            });
+        });
+
+        function addMessageToChat(message, className) {
+            var chatBox = document.getElementById('chat-box');
+            var messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ' + className;
+
+            var messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message;
+
+            messageDiv.appendChild(messageContent);
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+        }
+    </script>
+</body>
+</html>
